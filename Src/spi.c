@@ -99,9 +99,9 @@ __inline void spi_select(void)
 
 __inline void spi_deselect(void)
 {
-	if (speedMode == SPI_SPEED_SLOW){
-		timer_delay(TIMER_MILLIS(10));
-	}
+	//if (speedMode == SPI_SPEED_SLOW){
+	//	timer_delay(TIMER_MILLIS(10));
+	//}
     CP_WR(REG_SLAVE_SELECT, 0);
 }
 
