@@ -21,6 +21,7 @@
 #define REG_RESERVED_1          1
 #define REG_UPPER_LENGTH        2   // WO, Upper byte for lengths
 #define REG_GPIOS 		        3   // RO, Read GPIO values 20-27
+#define REG_RESET				4	// WO, Set value of pin 29
 #define REG_RX_HEAD             4   // RO
 #define REG_RX_TAIL             5   // RO
 #define REG_TX_HEAD             6   // RO
@@ -91,17 +92,18 @@ void spi_diag(void)
 	D(DebugPrint(DEBUG_LEVEL, "REG_INT_FIRED 0x%02X, EXTERNAL INT %d, CARD DETECT %d\n", CP_RD(REG_INT_FIRED), (intmask & PIN_INT)?1:0, (intmask & PIN_CD)?1:0));
 }
 
+__inline void spider_usr_reset(int val)
+{
+	CP_WR(REG_RESET, (val > 0)?1:0);
+}
+
 __inline void spi_select(void)
 {
     CP_WR(REG_SLAVE_SELECT, 1);
-	//timer_delay(TIMER_MILLIS(10));
 }
 
 __inline void spi_deselect(void)
 {
-	//if (speedMode == SPI_SPEED_SLOW){
-	//	timer_delay(TIMER_MILLIS(10));
-	//}
     CP_WR(REG_SLAVE_SELECT, 0);
 }
 

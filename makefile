@@ -1,7 +1,7 @@
 # Version - these values are mastered here and overwrite the generated values in makefiles for Debug and Release
 LIBDEVMAJOR = 1
 LIBDEVMINOR = 0
-LIBDEVDATE = '26.12.2025'
+LIBDEVDATE = '04.01.2026'
 
 RELEASEDIR = Release
 DEBUGDIR = Debug

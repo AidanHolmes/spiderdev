@@ -22,6 +22,7 @@
 int spi_initialize(struct ClockportConfig *config, BYTE sig); // Set sig to use when interrupts fired.
 void spi_diag(void); // print state of SPI interrupts and GPIO vals
 
+void spider_usr_reset(int val);
 void spi_enable_interrupt(void);
 void spi_disable_interrupt(void);
 // Returns bit mask of pin which fired the interrupt and clears the interrupt to fire again
