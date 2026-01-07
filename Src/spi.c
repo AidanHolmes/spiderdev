@@ -166,7 +166,7 @@ void  __asm __saveds spi_read(register __a0 UBYTE *buf, register __d0 WORD size)
 {
 	volatile UBYTE *fifo = NULL;
 	UBYTE rx_head =0, bytes_in_rx =0, rx_tail =0;
-	UWORD retry = 1000;
+	UWORD retry = 50000;
 
     CP_WR(REG_UPPER_LENGTH, size >> 8);
     CP_WR(REG_TX_FEED, size & 0xff);
@@ -202,10 +202,10 @@ void  __asm __saveds spi_read(register __a0 UBYTE *buf, register __d0 WORD size)
                 rx_head += bytes_in_rx;
                 size -= bytes_in_rx;
             }
-			//if (--retry == 0){
-			//	D(DebugPrint(DEBUG_LEVEL,"spi_read: Failed! - Bytes in RX %u, head %u, tail %u, remaining to read %u\n", bytes_in_rx, rx_head, rx_tail, size));
-			//	break;
-			//}
+			if (--retry == 0){
+				DebugPrint(DEBUG_LEVEL,"spi_read: Failed! - Bytes in RX %u, head %u, tail %u, remaining to read %u\n", bytes_in_rx, rx_head, rx_tail, size);
+				break;
+			}
         }
         while (size);
     }
@@ -215,7 +215,7 @@ void  __asm __saveds spi_write(register __a0 const UBYTE *buf, register __d0 WOR
 {
 	volatile BYTE *fifo = NULL;
 	UBYTE tx_head =0, tx_tail =0, next_tx_tail=0, bytes_in_tx =0, free_space =0;
-	UWORD retry = 1000;
+	UWORD retry = 50000;
 	
     CP_WR(REG_UPPER_LENGTH, size >> 8);
     CP_WR(REG_RX_DISCARD, size & 0xff);
@@ -238,7 +238,7 @@ void  __asm __saveds spi_write(register __a0 const UBYTE *buf, register __d0 WOR
             bytes_in_tx = tx_tail - tx_head;
             free_space = 255 - bytes_in_tx;
 			
-			//D(DebugPrint(DEBUG_LEVEL,"spi_read: Bytes free in TX %u, head %u, tail %u, remaining to write %u\n", free_space, tx_head, tx_tail, size));
+			//D(DebugPrint(DEBUG_LEVEL,"spi_write: Bytes free in TX %u, head %u, tail %u, remaining to write %u\n", free_space, tx_head, tx_tail, size));
 
             if (free_space){
                 if (free_space > size){
@@ -250,17 +250,18 @@ void  __asm __saveds spi_write(register __a0 const UBYTE *buf, register __d0 WOR
                 tx_tail += free_space;
                 size -= free_space;
             }
-			//if (--retry == 0){
-			//	D(DebugPrint(DEBUG_LEVEL,"spi_read: Failed! - Bytes free in TX %u, head %u, tail %u, remaining to write %u\n", free_space, tx_head, tx_tail, size));
-			//	break;
-			//}
+			if (--retry == 0){
+				DebugPrint(DEBUG_LEVEL,"spi_write: Failed! - Bytes free in TX %u, head %u, tail %u, remaining to write %u\n", free_space, tx_head, tx_tail, size);
+				break;
+			}
         }while (size);
     }
+	retry = 50000;
 	while((CP_RD(REG_STATUS) & STATUS_RX_DISCARD_EMPTY) == 0){
-//		if (--retry == 0){
-//			D(DebugPrint(DEBUG_LEVEL,"spi_read: Failed! - Status 0x%02X\n", CP_RD(REG_STATUS)));
-//			break;
-//		}
+		if (--retry == 0){
+			DebugPrint(DEBUG_LEVEL,"spi_write: Failed! - Status 0x%02X\n", CP_RD(REG_STATUS));
+			break;
+		}
 	}
 }
 
@@ -325,7 +326,8 @@ int spi_initialize(struct ClockportConfig *config, BYTE sig)
 
 	spi_set_speed(SPI_SPEED_SLOW);
 
-    CP_WR(REG_INT_ARMED, 0xFF); // Arm all - TO DO: add some control for different interrupts on pins (via device tree)
+	CP_WR(REG_INT_ARMED, 0); // Disarm all
+    //CP_WR(REG_INT_ARMED, 0xFF); // Arm all - TO DO: add some control for different interrupts on pins (via device tree)
     CP_WR(REG_INT_FIRED, 0);
 	
     interrupt_data.clockport_address = clockport_address;
@@ -344,7 +346,9 @@ int spi_initialize(struct ClockportConfig *config, BYTE sig)
     int_num = config->interrupt_number == 2 ? INTB_PORTS : (config->interrupt_number == 3 ? INTB_VERTB : INTB_EXTER);
 	AddIntServer(int_num, &ports_interrupt);
 
-    return 0;
+	CP_WR(REG_INT_ARMED, 0xFF); 
+    
+	return 0;
 }
 
 void spi_shutdown(void)

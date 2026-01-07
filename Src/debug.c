@@ -5,10 +5,10 @@
 #include <stdio.h>
 
 
-#ifndef _DEBUG
-void DebugPrint(int level, char *format, ...){}
-void DebugInit(int level){}
-#else
+//#ifndef _DEBUG
+//void DebugPrint(int level, char *format, ...){}
+//void DebugInit(int level){}
+//#else
 
 // TO DO: rethink this for devices as stdio could cause crashes and therefore should not use
 int g__debug_level ;
@@ -128,4 +128,4 @@ void DebugPutHex(const char *what, ULONG val)
 	DebugPutChar('\n');
 }
 
-#endif
+//#endif
